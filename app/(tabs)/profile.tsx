@@ -1,6 +1,6 @@
 import { Text, View } from "react-native";
 
-export default function DashboardScreen() {
+export default function ProfileScreen() {
   return (
     <View
       style={{
@@ -9,7 +9,7 @@ export default function DashboardScreen() {
         alignItems: "center",
       }}
     >
-      <Text>Dashboard Tab</Text>
+      <Text>Profile Tab</Text>
     </View>
   );
 }

@@ -1,33 +1,56 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { Tabs } from "expo-router";
+import React from "react";
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+const ProfileIcon = ({ color }: { color: string }) => (
+  <Ionicons size={28} name="person-outline" color={color} />
+);
+const HabitsIcon = ({ color }: { color: string }) => (
+  <Ionicons size={28} name="list-outline" color={color} />
+);
+const DashboardIcon = ({ color }: { color: string }) => (
+  <Ionicons size={28} name="bar-chart-outline" color={color} />
+);
+const GoalsIcon = ({ color }: { color: string }) => (
+  <Ionicons size={28} name="trophy-outline" color={color} />
+);
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: "Dashboard",
+          tabBarIcon: DashboardIcon,
         }}
       />
+
       <Tabs.Screen
-        name="explore"
+        name="habits"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: "Habits",
+          tabBarIcon: HabitsIcon,
+        }}
+      />
+
+      <Tabs.Screen
+        name="goals"
+        options={{
+          title: "Goals",
+          tabBarIcon: GoalsIcon,
+        }}
+      />
+
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ProfileIcon,
         }}
       />
     </Tabs>
