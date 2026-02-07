@@ -1,101 +1,73 @@
 name: Version Bump
 
 on:
-    pull_request:
-        branches: [main]
-        types: [labeled]
+  pull_request:
+    branches: [main]
+    types: [labeled]
 
 permissions:
-    contents: write
+  contents: write
 
 jobs:
-    path-changes:
-        name: Detect Path Changes
-        runs-on: ubuntu-latest
-        if: |
-            github.event.label.name == 'major' ||
-            github.event.label.name == 'minor' ||
-            github.event.label.name == 'patch'
+  version-bump:
+    name: Bump Version
+    runs-on: ubuntu-latest
+    if: |
+      github.event.label.name == 'major' ||
+      github.event.label.name == 'minor' ||
+      github.event.label.name == 'patch'
 
-        permissions:
-            contents: read
-            pull-requests: read
+    permissions:
+      contents: write
+      pull-requests: write
 
-        outputs:
-            web: ${{ steps.detect.outputs.web }}
-            backend: ${{ steps.detect.outputs.backend }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT_TOKEN }}
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
 
-            - name: Detect path changes
-              id: detect
-              uses: dorny/paths-filter@v3.0.2
-              with:
-                  filters: |
-                      web:
-                        - "apps/web/**"
-                      backend:
-                        - "apps/backend/**"
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          cache: "pnpm"
 
-    version-bump:
-        name: Bump Version
-        runs-on: ubuntu-latest
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-        permissions:
-            contents: write
-            pull-requests: write
+      - name: Pull latest changes
+        run: git pull origin ${{ github.head_ref }}
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
-                  token: ${{ secrets.PAT_TOKEN }}
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-            - name: Setup pnpm
-              uses: pnpm/action-setup@v4
+      - name: Bump version
+        id: bump_version
+        run: |
+          echo "Bumping version with label: ${{ github.event.label.name }}"
+          pnpm version ${{ github.event.label.name }} --no-git-tag-version
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: "20"
-                  cache: "pnpm"
+          echo "New version:"
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-            - name: Configure Git
-              run: |
-                  git config user.name "github-actions[bot]"
-                  git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Commit and push version bump
+        run: |
+          git add package.json
+          git commit -m "chore: v${{ steps.bump_version.outputs.version }}"
 
-            - name: Pull latest changes
-              run: git pull origin ${{ github.head_ref }}
+      - name: Create Git tag
+        run: |
+          git tag -a "v${{ steps.bump_version.outputs.version }}" -m "Version ${{ steps.bump_version.outputs.version }}"
 
-            - name: Install dependencies
-              run: pnpm install --frozen-lockfile
-
-            - name: Bump version
-              id: bump_version
-              run: |
-                  echo "Bumping version with label: ${{ github.event.label.name }}"
-                  pnpm version ${{ github.event.label.name }} --no-git-tag-version
-
-                  echo "New version:"
-                  NEW_VERSION=$(node -p "require('./package.json').version")
-                  echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-
-            - name: Commit and push version bump
-              run: |
-                  git add package.json
-                  git commit -m "chore: v${{ steps.bump_version.outputs.version }}"
-
-            - name: Create Git tag
-              run: |
-                  git tag -a "v${{ steps.bump_version.outputs.version }}" -m "Version ${{ steps.bump_version.outputs.version }}"
-
-            - name: Push changes and tag
-              run: |
-                  git push origin HEAD:${{ github.head_ref }}
-                  git push origin "v${{ steps.bump_version.outputs.version }}"
+      - name: Push changes and tag
+        run: |
+          git push origin HEAD:${{ github.head_ref }}
+          git push origin "v${{ steps.bump_version.outputs.version }}"
