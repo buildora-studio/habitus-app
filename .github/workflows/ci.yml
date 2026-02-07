@@ -1,43 +1,37 @@
 name: CI
 
 on:
-    pull_request:
-        branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-    validate:
-        name: Run Validations
-        runs-on: ubuntu-latest
+  validate:
+    name: Run Validations
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: 🛎️ Checkout repo
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 2
+    steps:
+      - name: 🛎️ Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
-            - name: 🧩 Enable pnpm
-              run: corepack enable pnpm
+      - name: 🧩 Enable pnpm
+        run: corepack enable pnpm
 
-            - name: 📦 Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: lts/*
-                  cache: "pnpm"
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: "pnpm"
 
-            - name: 📥 Install dependencies
-              run: pnpm install --frozen-lockfile
+      - name: 📥 Install dependencies
+        run: pnpm install --frozen-lockfile
 
-            # Optional: setup Turbo Remote Caching (if you use it)
-            - name: ⚡ Setup Turborepo Remote Cache
-              if: env.TURBO_TOKEN != ''
-              run: echo "✅ Turborepo remote cache ready"
-              env:
-                  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      - name: 👓 Run lint
+        run: pnpm lint
 
-            - name: 🚀 Run affected pipelines
-              run: |
-                  # Detect changes automatically using Turborepo
-                  pnpm turbo run lint test:cov --filter=...[HEAD^1]
+      - name: 🧪 Run test
+        run: pnpm test:cov
 
-            - name: ✅ Done
-              run: echo "CI validations complete for changed apps ✅"
+      - name: ✅ Done
+        run: echo "CI validations complete for changed apps ✅"
