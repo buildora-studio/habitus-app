@@ -1,7 +1,7 @@
 {
   "name": "habitus-app",
   "main": "expo-router/entry",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -53,6 +53,7 @@
     "jest-expo": "~54.0.17",
     "typescript": "~5.9.2"
   },
+  "packageManager": "pnpm@10.28.0",
   "private": true,
   "jest": {
     "preset": "jest-expo",
