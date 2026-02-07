@@ -1,0 +1,35 @@
+name: Release
+
+on:
+    push:
+        branches: [main]
+
+permissions:
+    contents: write
+
+jobs:
+    release:
+        name: Create GitHub Release
+        runs-on: ubuntu-latest
+        steps:
+            - name: 🛎️ Checkout repo
+              uses: actions/checkout@v4
+
+            - name: Get latest tag
+              id: get-latest-tag
+              run: |
+                  git fetch --tags
+                  LATEST_TAG=$(git tag --sort=-v:refname | head -n 1 || echo "v0.0.0")
+                  echo "Latest tag: $LATEST_TAG"
+                  echo "::set-output name=tag::$LATEST_TAG"
+            - name: Create Release
+              uses: actions/create-release@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  tag_name: ${{ steps.get-latest-tag.outputs.tag || 'v0.0.0' }}
+                  release_name: Release ${{ steps.get-latest-tag.outputs.tag || 'v0.0.0' }}
+                  body: "Release ${{ steps.get-latest-tag.outputs.tag || 'v0.0.0' }}"
+                  # body: "To see the changelog, [here](https://github.com/${{ github.repository }}blob/main/CHANGELOG.md)" TODO: Implement CHANGELOG use
+                  draft: false
+                  prerelease: false
